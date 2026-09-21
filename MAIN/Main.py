@@ -17,7 +17,7 @@ wordlist_path = None
 
 if "-w" in sys.argv:
     w_index = sys.argv.index("-w")
-    if w_index + 1  {detected_vulnerabilities[vuln_name]['url']}")
+    if w_index + 1: print(f"{detected_vulnerabilities[vuln_name]['url']}")
                 vuln_counter += 1
 
     elif service == "azure":
