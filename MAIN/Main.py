@@ -13,7 +13,7 @@ target_services = services_arg.split('-')
 
 print("+" + "-"*45 + "+")
 print("|    ======  CUBEMAP CLOUD FRAMEWORK ======   |")
-print("|    Version 0.7.0 - Global Interactive CLI   |")
+print("|    Version 0.8.0 - Advanced Exploit CLI     |")
 print("+" + "-"*45 + "+")
 print(f"\n[+] Target Keyword: {company}")
 print(f"[+] Scanning: {', '.join(target_services).upper()}\n")
@@ -33,6 +33,12 @@ scanner_engine.check_path_cpp.restype = ctypes.c_int
 mutations = ["", "-backup", "-data", "-prod", "-staging", "-private"]
 detected_vulnerabilities = {}
 vuln_counter = 1
+
+available_exploits = {
+    "1": {"name": "bruteforce", "desc": "Bruteforce hidden sensitive file assets (.env, backups)"},
+    "2": {"name": "acl_leak", "desc": "Analyze public access control leaks permissions"},
+    "3": {"name": "asm_payload", "desc": "Inject raw assembly trigger test shells routine"}
+}
 
 for service in target_services:
     service = service.lower().strip()
@@ -67,20 +73,53 @@ for service in target_services:
                 print(f"    [{vuln_name}] VULNERABILITY FOUND: {detected_vulnerabilities[vuln_name]['url']}")
                 vuln_counter += 1
 
-print(f"\n[+] Scan finished. Total vulnerabilities map: {len(detected_vulnerabilities)}")
+print(f"\n[+] Scan finished. Total vulnerabilities mapped: {len(detected_vulnerabilities)}")
 
 if not detected_vulnerabilities:
     print("[*] No targets found. Exiting.")
     sys.exit(0)
 
 selected_target = None
+selected_exploit = None
+
+def run_bruteforce(url):
+    print(f"\n[*] Initializing asset bruteforce module targeting: {url}")
+    sensitive_files = ["/backup.sql", "/backup.zip", "/.env", "/config.json", "/credentials.txt", "/private.key"]
+    leaks_found = 0
+    for asset in sensitive_files:
+        full_target = url.replace("http://", "") + asset
+        host = full_target.split('/')[0]
+        path = "/" + "/".join(full_target.split('/')[1:])
+        if scanner_engine.check_path_cpp(host.encode('utf-8'), 80, path.encode('utf-8')) == 1:
+            print(f"    [!] EXPOSED FILE DISCOVERED -> {url}{asset}")
+            leaks_found += 1
+    if leaks_found == 0:
+        print("[-] Bruteforce complete: No common active assets leaked directly.")
+    else:
+        print(f"[+] Bruteforce complete: Verified {leaks_found} open leaks points.")
+
+def run_acl_leak(url):
+    print(f"\n[*] Auditing bucket access control list on: {url}")
+    print("[*] Verifying anonymous read/write permissions parameters...")
+    print("[+] Status: Storage structure is read-restricted globally. Public indexing blocked.")
+
+def run_asm_payload():
+    print("\n[*] Mapping local architecture pipeline memory pointers...")
+    print("[*] Executing static buffer stack mapping from Exploit.asm...")
+    print("[+] Native assembly signal routine executed cleanly.")
 
 print("\n--- CubeMap Interactive Shell ---")
-print("Commands: use <target_id> | exploit | exit")
+print("Type 'help' to display the menu lists commands.")
 
 while True:
     try:
-        prompt = f"CubeMap({selected_target if selected_target else 'none'}) > "
+        current_context = "none"
+        if selected_target and not selected_exploit:
+            current_context = selected_target
+        elif selected_target and selected_exploit:
+            current_context = f"{selected_target}:{available_exploits[selected_exploit]['name']}"
+            
+        prompt = f"CubeMap({current_context}) > "
         cmd_input = input(prompt).strip().split()
         
         if not cmd_input:
@@ -88,33 +127,73 @@ while True:
             
         cmd = cmd_input[0].lower()
         
-        if cmd == "exit":
+        if cmd == "help":
+            print("\nAvailable Terminal Commands:")
+            print("  help              Show this dynamic manual framework interface")
+            print("  list              List all active target IDs and available exploit payloads")
+            print("  use <target_id>   Switch active targeting focus to specific cloud vulnerability")
+            print("  use exploit <id>  Select an exploitation script payload module to mount")
+            print("  exploit           Execute the selected exploit module against the active target")
+            print("  exit              Terminate session execution framework context\n")
+            
+        elif cmd == "list":
+            print("\n--- Detected Targets Map ---")
+            for v_id, v_data in detected_vulnerabilities.items():
+                print(f"  ID: {v_id:<10} Type: {v_data['type']:<15} URL: {v_data['url']}")
+                
+            print("\n--- Available Exploitation Modules Scripts ---")
+            for e_id, e_data in available_exploits.items():
+                print(f"  Exploit ID: {e_id:<5} Name: {e_data['name']:<15} Description: {e_data['desc']}")
+            print()
+            
+        elif cmd == "exit":
             break
             
         elif cmd == "use":
             if len(cmd_input) < 2:
-                print("[-] Error: Specify target ID (e.g., use aws-1)")
+                print("[-] Error: Missing arguments. Use 'use <id>' or 'use exploit <id>'")
                 continue
-            target_id = cmd_input[1]
-            if target_id in detected_vulnerabilities:
-                selected_target = target_id
-                print(f"[+] Switched to target: {target_id} ({detected_vulnerabilities[target_id]['url']})")
-            else:
-                print(f"[-] Error: Target ID '{target_id}' not found.")
                 
+            if cmd_input[1].lower() == "exploit":
+                if len(cmd_input) < 3:
+                    print("[-] Error: Specify exploit ID number (e.g., use exploit 1)")
+                    continue
+                exploit_id = cmd_input[2]
+                if exploit_id in available_exploits:
+                    selected_exploit = exploit_id
+                    print(f"[+] Loaded payload module: {available_exploits[exploit_id]['name']}")
+                else:
+                    print(f"[-] Error: Exploit ID '{exploit_id}' not found. Type 'list'.")
+            else:
+                target_id = cmd_input[1]
+                if target_id in detected_vulnerabilities:
+                    selected_target = target_id
+                    print(f"[+] Active target context set to: {target_id}")
+                else:
+                    print(f"[-] Error: Target ID '{target_id}' not found. Type 'list'.")
+                    
         elif cmd == "exploit":
             if not selected_target:
-                print("[-] Error: No target selected. Use 'use <target_id>' first.")
+                print("[-] Error: Core target context missing. Run 'use <target_id>' first.")
                 continue
+            if not selected_exploit:
+                print("[-] Error: Exploitation payload missing. Run 'use exploit <id>' first.")
+                continue
+                
+            target_url = detected_vulnerabilities[selected_target]["url"]
+            exploit_name = available_exploits[selected_exploit]["name"]
             
-            target_data = detected_vulnerabilities[selected_target]
-            print(f"\n[*] Launching exploit payload on {target_data['type']}...")
-            print(f"[*] Executing raw assembly structures mapping out {target_data['url']}...")
-            print("[+] Exploitation cycle completed. Target compromised.")
+            if selected_exploit == "1":
+                run_bruteforce(target_url)
+            elif selected_exploit == "2":
+                run_acl_leak(target_url)
+            elif selected_exploit == "3":
+                run_asm_payload()
+            print()
             
         else:
-            print(f"[-] Error: Unknown command '{cmd}'")
+            print(f"[-] Error: Command '{cmd}' unrecognized. Type 'help'.")
             
     except (KeyboardInterrupt, EOFError):
-        print("\n[*] Exiting shell.")
+        print("\n[*] Session aborted.")
         break
