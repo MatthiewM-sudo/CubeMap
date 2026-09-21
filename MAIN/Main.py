@@ -9,18 +9,16 @@ if len(sys.argv) < 4 or "-e" not in sys.argv:
 
 services_arg = sys.argv[sys.argv.index("-e") + 1]
 company = sys.argv[-1]
-if company == services_arg or ( "-w" in sys.argv and company == sys.argv[sys.argv.index("-w") + 1]):
+if company == services_arg or ("-w" in sys.argv and company == sys.argv[sys.argv.index("-w") + 1]):
     company = sys.argv[3]
 
 target_services = services_arg.split('-')
 wordlist_path = None
 
-    if "-w" in sys.argv:
-        w_index = sys.argv.index("-w")
-        if w_index + 1 < len(sys.argv):
-            url_target = detected_vulnerabilities[vuln_name]['url']
-            print(f"[+] Vulnerability URL: {url_target}")
-            vuln_counter += 1
+if "-w" in sys.argv:
+    w_index = sys.argv.index("-w")
+    if w_index + 1  {detected_vulnerabilities[vuln_name]['url']}")
+                vuln_counter += 1
 
     elif service == "azure":
         print(f"[*] Scanning Azure infrastructure...")
