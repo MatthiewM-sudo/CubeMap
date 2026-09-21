@@ -44,7 +44,7 @@ extern "C" {
             return 0;
         }
 
-        char response;
+        char response[1024];
         std::memset(response, 0, sizeof(response));
         int bytes_received = recv(sock, response, sizeof(response) - 1, 0);
         close(sock);
