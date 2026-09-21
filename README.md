@@ -6,7 +6,7 @@ CubeMap is an offensive security tool designed to map, enumerate, and test misco
 * **FUN/EXPLOIT/Exploit.asm**: Low-level assembly exploitation payloads and shellcodes.
 * **FUN/SCANNER/Scanner.cpp**: C++ socket engine checking open endpoints via direct hardware layer integration.
 * **MAIN/Main.py**: Main Python controller orchestrating user arguments and logic pipelines.
-* **README/README.md**: Tool documentation.
+* **README.md**: Tool documentation.
 
 ## Prerequisites & Installation
 Ensure you are running a Linux distribution (such as Kali Linux) with `g++` and Python 3 installed.
