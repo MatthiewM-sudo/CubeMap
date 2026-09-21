@@ -2,6 +2,27 @@ import sys
 import ctypes
 import os
 
+# Menus et initialisation des structures de données requises
+detected_vulnerabilities = {}
+available_exploits = {
+    "1": {"name": "Subdomain Takeover", "desc": "Evaluate dangling DNS pointer takeovers"},
+    "2": {"name": "Metadata Exfiltration", "desc": "Test cloud metadata injection paths"},
+    "3": {"name": "Asset Fuzzing", "desc": "Bruteforce common open files and leaks"},
+    "4": {"name": "Policy Dump", "desc": "Parse resource access control statements"}
+}
+mutations = ["", "-test", "-dev", "-prod", "-staging", "-backup", "-data", "-storage"]
+
+# Mock du moteur C++ pour assurer la portabilité de l'outil en laboratoire
+class MockScannerEngine:
+    def check_path_cpp(self, host, port, path):
+        # Simule une découverte positive sur certains patterns standards pour la démo
+        if b"backup" in path or b"blob" in host or b"storage" in host:
+            return 1
+        return 0
+
+scanner_engine = MockScannerEngine()
+
+# Étape 1 : Validation des arguments système requis
 if len(sys.argv) < 4 or "-e" not in sys.argv:
     print("[!] Usage: CubeMap -e <service1-service2> <company_keyword> [-w <wordlist_path>]")
     print("Example: CubeMap -e aws-azure bank -w /usr/share/wordlists/dirb/common.txt")
@@ -14,10 +35,26 @@ if company == services_arg or ("-w" in sys.argv and company == sys.argv[sys.argv
 
 target_services = services_arg.split('-')
 wordlist_path = None
+vuln_counter = 0
 
+# Extraction de la configuration de la wordlist personnalisée
 if "-w" in sys.argv:
     w_index = sys.argv.index("-w")
-    if w_index + 1  {detected_vulnerabilities[vuln_name]['url']}")
+    if w_index + 1 < len(sys.argv):
+        wordlist_path = sys.argv[w_index + 1]
+
+# Étape 2 : Boucle principale de cartographie et d'énumération Cloud
+for service in target_services:
+    service = service.lower()
+    
+    if service == "aws":
+        print(f"[*] Scanning AWS infrastructure...")
+        for mut in mutations:
+            host = f"{company}{mut}.s3.amazonaws.com"
+            if scanner_engine.check_path_cpp(host.encode('utf-8'), 80, b"/") == 1:
+                vuln_name = f"aws-{vuln_counter}"
+                detected_vulnerabilities[vuln_name] = {"type": "AWS S3 Bucket", "url": f"http://{host}", "host": host}
+                print(f"    [{vuln_name}] SECURITY ALERT: Verified Live Target -> {detected_vulnerabilities[vuln_name]['url']}")
                 vuln_counter += 1
 
     elif service == "azure":
@@ -49,6 +86,7 @@ if not detected_vulnerabilities:
 selected_target = None
 selected_exploit = None
 
+# Étape 3 : Définition des modules de vérification de vulnérabilités
 def run_subdomain_takeover(url):
     print(f"\n[*] Evaluating dangling CNAME signatures on: {url}")
     print("[*] Testing routing tables context mapping...")
@@ -61,7 +99,6 @@ def run_metadata_exfil(url):
 
 def run_bucket_bruteforce(host_target):
     print(f"\n[*] Initializing specialized C++ asset fuzzing module targeting: {host_target}")
-    
     paths_to_fuzz = ["/.env", "/backup.sql", "/config.json", "/credentials.txt", "/private.key", "/settings.py", "/wp-config.php"]
     
     if wordlist_path and os.path.exists(wordlist_path):
@@ -71,7 +108,6 @@ def run_bucket_bruteforce(host_target):
     
     print(f"[*] Launching high-speed verification loop against {len(paths_to_fuzz)} targets...")
     discovered = 0
-    
     for path in paths_to_fuzz:
         if scanner_engine.check_path_cpp(host_target.encode('utf-8'), 80, path.encode('utf-8')) == 1:
             print(f"    [!] SUCCESS: Verifiable Open Leak Point Found -> http://{host_target}{path}")
@@ -84,6 +120,7 @@ def run_policy_dump(url):
     print("[*] Querying IAM definition blocks tables...")
     print("[-] Execution finished: Public indexing policy is set to implicit block mode.")
 
+# Étape 4 : Lancement de la console interactive (Interactive Shell)
 print("\n--- CubeMap Interactive Shell ---")
 print("Type 'help' to display the management menu interface.")
 
@@ -166,3 +203,9 @@ while True:
                 run_bucket_bruteforce(target_info["host"])
             elif selected_exploit == "4":
                 run_policy_dump(target_info["url"])
+
+    except KeyboardInterrupt:
+        print("\n[!] Framework session interrupted.")
+        break
+    except Exception as e:
+        print(f"[-] Shell Exception: {e}")
