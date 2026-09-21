@@ -15,10 +15,12 @@ if company == services_arg or ( "-w" in sys.argv and company == sys.argv[sys.arg
 target_services = services_arg.split('-')
 wordlist_path = None
 
-if "-w" in sys.argv:
-    w_index = sys.argv.index("-w")
-    if w_index + 1: print(f"{detected_vulnerabilities[vuln_name]['url']}")
-                vuln_counter += 1
+    if "-w" in sys.argv:
+        w_index = sys.argv.index("-w")
+        if w_index + 1 < len(sys.argv):
+            url_target = detected_vulnerabilities[vuln_name]['url']
+            print(f"[+] Vulnerability URL: {url_target}")
+            vuln_counter += 1
 
     elif service == "azure":
         print(f"[*] Scanning Azure infrastructure...")
